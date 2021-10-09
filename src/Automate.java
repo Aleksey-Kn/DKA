@@ -76,13 +76,4 @@ public class Automate {
             return false;
         }
     }
-
-    public static void main(String[] args) {
-        StringBuilder stringBuilder = new StringBuilder();
-        Automate automate = new Automate(Set.of('0', '1'), Set.of("q0", "q1", "q2"),
-                Set.of("q0 -> 1q0", "q0 -> 0q1", "q1 -> 1q2"),
-                "q0", Set.of("q2"));
-        System.out.println(automate.canCreate("11101".toCharArray(), stringBuilder)?
-                "Language can create": stringBuilder.toString());
-    }
 }
