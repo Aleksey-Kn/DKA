@@ -80,11 +80,16 @@ public class Frame extends JFrame {
         JButton run = new JButton("Run");
         run.setAlignmentX(Component.CENTER_ALIGNMENT);
         answer.add(run);
+        JPanel log = new JPanel();
+        log.setAlignmentX(Component.CENTER_ALIGNMENT);
+        log.setLayout(new BoxLayout(log, BoxLayout.Y_AXIS));
+        add(log, BorderLayout.CENTER);
         JLabel result = new JLabel();
         result.setText(" ");
         result.setAlignmentX(Component.CENTER_ALIGNMENT);
         answer.add(result);
-        StringBuilder stringBuilder = new StringBuilder();
+        StringBuilder cause = new StringBuilder();
+        LinkedHashSet<String> logString = new LinkedHashSet<>();
         run.addActionListener(l -> {
             try {
                 Automate automate = new Automate(
@@ -96,10 +101,18 @@ public class Frame extends JFrame {
                         new TreeSet<>(logicRulesSet),
                         startState.getText().trim(),
                         new TreeSet<>(java.util.List.of(endStates.getText().split(" "))));
-                boolean success = automate.canCreate(language.getText().toCharArray(), stringBuilder);
+                boolean success = automate.canCreate(language.getText(), cause, logString);
                 result.setForeground(success?
                         Color.GREEN: Color.ORANGE);
-                result.setText(success? "Can create": stringBuilder.toString());
+                    log.removeAll();
+                    JLabel nowLabel;
+                    for(String s: logString){
+                        nowLabel = new JLabel(s);
+                        nowLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+                        log.add(nowLabel);
+                    }
+                    log.updateUI();
+                    result.setText(success? "Can create": cause.toString());
             } catch (Exception e){
                 result.setForeground(Color.RED);
                 result.setText(e.getMessage());

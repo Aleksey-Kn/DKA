@@ -41,8 +41,10 @@ public class Automate {
         }
     }
 
-    public boolean canCreate(char[] language, StringBuilder cause){
+    public boolean canCreate(String lang, StringBuilder cause, LinkedHashSet<String> logs){
+        char[] language = lang.toCharArray();
         cause.delete(0, cause.length());
+        logs.clear();
         for(char c: language){
             if(!terminal.contains(c)){
                 cause.append("Language exist unacceptable symbol");
@@ -51,14 +53,11 @@ public class Automate {
         }
         String nowState = startState;
         boolean wasSearch;
-        for(char c: language){
-            if(nowState.equals("")){
-                cause.append("The final state is unattainable");
-                return false;
-            }
+        for(int i = 0; i < language.length; i++){
             wasSearch = false;
+            logs.add(nowState + ": " + lang.substring(i));
             for(Rules nowVal: regulations.get(nowState)){
-                if(c == nowVal.terminal){
+                if(language[i] == nowVal.terminal){
                     nowState = nowVal.state;
                     wasSearch = true;
                     break;
@@ -69,9 +68,10 @@ public class Automate {
                 return false;
             }
         }
-        if(endState.contains(nowState))
+        if(endState.contains(nowState)) {
+            logs.add(nowState + ": ");
             return true;
-        else {
+        } else {
             cause.append("End of the chain, but the end state has not been reached");
             return false;
         }
