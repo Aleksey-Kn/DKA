@@ -73,7 +73,7 @@ public class Frame extends JFrame {
             setOfRules.updateUI();
         });
 
-        JLabel languageLabel = new JLabel("Write language:");
+        JLabel languageLabel = new JLabel("Write grammatical:");
         answer.add(languageLabel);
         JTextField language = new JTextField();
         answer.add(language);
