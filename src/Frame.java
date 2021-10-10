@@ -55,10 +55,13 @@ public class Frame extends JFrame {
         setOfRules.setLayout(new BoxLayout(setOfRules, BoxLayout.Y_AXIS));
         regulations.add(setOfRules);
         ActionListener al = l -> {
-            setOfRules.add(new JLabel(rules.getText()));
-            logicRulesSet.add(rules.getText());
-            rules.setText("");
-            setOfRules.updateUI();
+            String s = rules.getText();
+            if(!s.equals("")) {
+                setOfRules.add(new JLabel(s));
+                logicRulesSet.add(s);
+                rules.setText("");
+                setOfRules.updateUI();
+            }
         };
         removeLastRules.addActionListener(l -> {
             setOfRules.remove(setOfRules.getComponentCount() - 1);
@@ -85,6 +88,7 @@ public class Frame extends JFrame {
         log.setLayout(new BoxLayout(log, BoxLayout.Y_AXIS));
         add(log, BorderLayout.CENTER);
         JLabel result = new JLabel();
+        result.setFont(new Font("Calibri", Font.BOLD, 24));
         result.setText(" ");
         result.setAlignmentX(Component.CENTER_ALIGNMENT);
         answer.add(result);
