@@ -22,6 +22,7 @@ public class Frame extends JFrame {
         answer.setLayout(new BoxLayout(answer, BoxLayout.Y_AXIS));
         add(answer, BorderLayout.SOUTH);
         JPanel buttonPanel = new JPanel();
+        buttonPanel.setPreferredSize(new Dimension(300, 75));
 
         JLabel terminalLabel = new JLabel("Terminal symbol: ");
         settings.add(terminalLabel);
@@ -50,6 +51,10 @@ public class Frame extends JFrame {
         buttonPanel.add(deleteRules);
         JButton removeLastRules = new JButton("Delete last");
         buttonPanel.add(removeLastRules);
+        JTextField indexField = new JTextField(5);
+        buttonPanel.add(indexField);
+        JButton removeIndex = new JButton("Remove index");
+        buttonPanel.add(removeIndex);
         regulations.add(buttonPanel);
         JPanel setOfRules = new JPanel();
         setOfRules.setLayout(new BoxLayout(setOfRules, BoxLayout.Y_AXIS));
@@ -73,6 +78,12 @@ public class Frame extends JFrame {
         deleteRules.addActionListener(l -> {
             setOfRules.removeAll();
             logicRulesSet.clear();
+            setOfRules.updateUI();
+        });
+        removeIndex.addActionListener(l -> {
+            setOfRules.remove(Integer.parseInt(indexField.getText()));
+            logicRulesSet.remove(Integer.parseInt(indexField.getText()));
+            indexField.setText("");
             setOfRules.updateUI();
         });
 
