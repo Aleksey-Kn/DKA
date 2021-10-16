@@ -1,6 +1,10 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -21,6 +25,8 @@ public class Frame extends JFrame {
         JPanel answer = new JPanel();
         answer.setLayout(new BoxLayout(answer, BoxLayout.Y_AXIS));
         add(answer, BorderLayout.SOUTH);
+        JPanel workWithFile = new JPanel();
+        add(workWithFile, BorderLayout.NORTH);
         JPanel buttonPanel = new JPanel();
         buttonPanel.setPreferredSize(new Dimension(300, 75));
 
@@ -85,6 +91,57 @@ public class Frame extends JFrame {
             logicRulesSet.remove(Integer.parseInt(indexField.getText()));
             indexField.setText("");
             setOfRules.updateUI();
+        });
+
+        JButton readFile = new JButton("Open file");
+        workWithFile.add(readFile);
+        readFile.addActionListener(l -> {
+            String address = JOptionPane.showInputDialog("Enter file name");
+            assert address != null;
+            if(address.contains(".")){
+                if(!address.split("\\.")[1].equals("dka")){
+                    JOptionPane.showMessageDialog(null, "Extension of file must be \"dka\"");
+                }
+            } else {
+                address += ".dka";
+            }
+            try {
+                Scanner scanner = new Scanner(new File(address));
+                rules.setText("");
+                terminals.setText(scanner.nextLine());
+                states.setText(scanner.nextLine());
+                startState.setText(scanner.nextLine());
+                endStates.setText(scanner.nextLine());
+                String temp;
+                setOfRules.removeAll();
+                logicRulesSet.clear();
+                while (scanner.hasNextLine()){
+                    temp = scanner.nextLine();
+                    setOfRules.add(new JLabel(temp));
+                    logicRulesSet.add(temp);
+                }
+                scanner.close();
+                setOfRules.updateUI();
+            } catch (FileNotFoundException e) {
+                JOptionPane.showMessageDialog(null, "Said fail not found");
+            }
+        });
+        JButton saveFile = new JButton("Save to file");
+        workWithFile.add(saveFile);
+        saveFile.addActionListener(l -> {
+            String address = JOptionPane.showInputDialog("Enter file name").split("\\.")[0].concat(".dka");
+            try {
+                FileWriter fileWriter = new FileWriter(address);
+                fileWriter.write(terminals.getText() + "\n");
+                fileWriter.write(states.getText() + "\n");
+                fileWriter.write(startState.getText() + "\n");
+                fileWriter.write(endStates.getText() + "\n");
+                for(String s: logicRulesSet)
+                    fileWriter.write(s + "\n");
+                fileWriter.close();
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(null, e.getMessage());
+            }
         });
 
         JLabel languageLabel = new JLabel("Write grammatical:");
