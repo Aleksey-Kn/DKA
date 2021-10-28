@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class Frame extends JFrame {
@@ -38,10 +39,16 @@ public class Frame extends JFrame {
         settings.add(stateLabel);
         JTextField states = new JTextField();
         settings.add(states);
+        settings.add(new JLabel("Memory alphabet"));
+        JTextField memoryAlphabet = new JTextField();
+        settings.add(memoryAlphabet);
         JLabel startStateLabel = new JLabel("Start state: ");
         settings.add(startStateLabel);
         JTextField startState = new JTextField();
         settings.add(startState);
+        settings.add(new JLabel("Zero symbol"));
+        JTextField zeroSymbol = new JTextField();
+        settings.add(zeroSymbol);
         JLabel endStateLabel = new JLabel("End states: ");
         settings.add(endStateLabel);
         JTextField endStates = new JTextField();
@@ -99,18 +106,20 @@ public class Frame extends JFrame {
             String address = JOptionPane.showInputDialog("Enter file name");
             assert address != null;
             if(address.contains(".")){
-                if(!address.split("\\.")[1].equals("dka")){
-                    JOptionPane.showMessageDialog(null, "Extension of file must be \"dka\"");
+                if(!address.split("\\.")[1].equals("dmpa")){
+                    JOptionPane.showMessageDialog(null, "Extension of file must be \"dmpa\"");
                 }
             } else {
-                address += ".dka";
+                address += ".dmpa";
             }
             try {
                 Scanner scanner = new Scanner(new File(address));
                 rules.setText("");
                 terminals.setText(scanner.nextLine());
                 states.setText(scanner.nextLine());
+                memoryAlphabet.setText(scanner.nextLine());
                 startState.setText(scanner.nextLine());
+                zeroSymbol.setText(scanner.nextLine());
                 endStates.setText(scanner.nextLine());
                 String temp;
                 setOfRules.removeAll();
@@ -129,12 +138,14 @@ public class Frame extends JFrame {
         JButton saveFile = new JButton("Save to file");
         workWithFile.add(saveFile);
         saveFile.addActionListener(l -> {
-            String address = JOptionPane.showInputDialog("Enter file name").split("\\.")[0].concat(".dka");
+            String address = JOptionPane.showInputDialog("Enter file name").split("\\.")[0].concat(".dmpa");
             try {
                 FileWriter fileWriter = new FileWriter(address);
                 fileWriter.write(terminals.getText() + "\n");
                 fileWriter.write(states.getText() + "\n");
+                fileWriter.write(memoryAlphabet.getText() + "\n");
                 fileWriter.write(startState.getText() + "\n");
+                fileWriter.write(zeroSymbol.getText() + "\n");
                 fileWriter.write(endStates.getText() + "\n");
                 for(String s: logicRulesSet)
                     fileWriter.write(s + "\n");
@@ -165,13 +176,18 @@ public class Frame extends JFrame {
         run.addActionListener(l -> {
             try {
                 Automate automate = new Automate(
-                        new TreeSet<>(Arrays.stream(terminals.getText().split(" "))
+                        Arrays.stream(terminals.getText().split(" "))
                                 .filter(s -> !s.equals(""))
                                 .map(s -> s.charAt(0))
-                                .collect(Collectors.toSet())),
+                                .collect(Collectors.toSet()),
                         new TreeSet<>(java.util.List.of(states.getText().split(" "))),
+                        Arrays.stream(memoryAlphabet.getText().split(" "))
+                                .filter(s -> !s.equals(""))
+                                .map(s -> s.charAt(0))
+                                .collect(Collectors.toSet()),
                         new TreeSet<>(logicRulesSet),
                         startState.getText().trim(),
+                        zeroSymbol.getText().trim().charAt(0),
                         new TreeSet<>(java.util.List.of(endStates.getText().split(" "))));
                 boolean success = automate.canCreate(language.getText(), cause, logString);
                 result.setForeground(success?

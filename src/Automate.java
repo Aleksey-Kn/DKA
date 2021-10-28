@@ -3,41 +3,88 @@ import java.util.stream.Collectors;
 
 public class Automate {
     static class Rules{
-        private final char terminal;
+        private final Optional<LinkedList<Character>> newMagazineSymbol;
         private final String state;
 
         Rules(String s){
-            s = s.trim();
-            terminal = s.charAt(0);
-            state = s.substring(1);
+            String[] strings = Arrays.stream(s.split(",")).map(String::trim).toArray(String[]::new);
+            state = strings[0];
+            if(strings[1].charAt(0) == 'e')
+                newMagazineSymbol = Optional.empty();
+            else {
+                if(strings[1].length() == 1)
+                    newMagazineSymbol = Optional.of(new LinkedList<>(List.of(strings[1].charAt(0))));
+                else
+                    newMagazineSymbol = Optional.of(new LinkedList<>(List.of(strings[1].charAt(1), strings[1].charAt(0))));
+            }
+        }
+    }
+
+    static class Moment{
+        private final String state;
+        private final char terminal;
+        private final char magazine;
+
+        Moment(String s){
+            String[] strings = s.split(",");
+            state = strings[0].trim();
+            terminal = strings[1].trim().charAt(0);
+            magazine = strings[2].trim().charAt(0);
+        }
+
+        Moment(String state, char terminal, char magazine){
+            this.terminal = terminal;
+            this.magazine = magazine;
+            this.state = state;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Moment moment = (Moment) o;
+            return terminal == moment.terminal && magazine == moment.magazine && state.equals(moment.state);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(state, terminal, magazine);
         }
     }
 
     private final Set<Character> terminal;
-    private final Map<String, Set<Rules>> regulations = new HashMap<>();
+    private final Set<Character> magazineAlphabet;
+    private final Map<Moment, Rules> regulations = new HashMap<>();
     private final String startState;
     private final Set<String> endState;
+    private final char zero;
 
-    public Automate(Set<Character> terminal, Set<String> state, Set<String> stringRules, String startState,
-                    Set<String> endState){
+    public Automate(Set<Character> terminal, Set<String> state, Set<Character> magazineAlphabet, Set<String> stringRules,
+                    String startState, char zeroMagazine, Set<String> endState){
         this.terminal = terminal.stream().map(Character::toLowerCase).collect(Collectors.toSet());
         this.startState = startState;
         this.endState = endState;
+        this.magazineAlphabet = magazineAlphabet;
+        zero = zeroMagazine;
 
         String[] t;
-        String key;
+        Moment key;
         Rules value;
         for(String r: stringRules){
             t = r.split("->");
-            key = t[0].trim();
+            key = new Moment(t[0]);
             value = new Rules(t[1]);
-            regulations.putIfAbsent(key, new HashSet<>());
-            regulations.get(key).add(value);
-            if(!state.contains(key))
-                throw new IllegalArgumentException("Use not exist non terminal symbol: " + key);
-            if(!this.terminal.contains(value.terminal) || !state.contains(value.state)) {
-                throw new IllegalArgumentException("Incorrect rules: " + r);
-            }
+            if(!state.contains(key.state))
+                throw new IllegalArgumentException("State not exist: " + key.state);
+            if(!state.contains(value.state))
+                throw new IllegalArgumentException("State not exist: " + value.state);
+            if(!terminal.contains(key.terminal) && key.terminal != 'e')
+                throw new IllegalArgumentException("Terminal not exist: " + key.terminal);
+            if(!magazineAlphabet.contains(key.magazine))
+                throw new IllegalArgumentException("Magazine symbol not exist: " + key.magazine);
+            if(value.newMagazineSymbol.isPresent() && !magazineAlphabet.containsAll(value.newMagazineSymbol.get()))
+                throw new IllegalArgumentException("Magazine symbol not exist: " + value.newMagazineSymbol.get());
+            regulations.put(key, value);
         }
     }
 
@@ -52,25 +99,41 @@ public class Automate {
             }
         }
         String nowState = startState;
-        boolean wasSearch;
+        Stack<Character> stack = new Stack<>();
+        stack.add(zero);
+        Moment moment;
+        Rules rules;
+        String tempForLog;
         for(int i = 0; i < language.length; i++){
-            wasSearch = false;
-            logs.add(nowState + ": " + lang.substring(i));
-            for(Rules nowVal: regulations.get(nowState)){
-                if(language[i] == nowVal.terminal){
-                    nowState = nowVal.state;
-                    wasSearch = true;
-                    break;
-                }
-            }
-            if(!wasSearch){
+            tempForLog = Arrays.toString(stack.toArray());
+            logs.add(nowState + ": " + lang.substring(i) + " / " +
+                    new StringBuilder(tempForLog.substring(1, tempForLog.length() - 1)).reverse());
+            moment = new Moment(nowState, language[i], stack.pop());
+            if(regulations.containsKey(moment)){
+                rules = regulations.get(moment);
+                nowState = rules.state;
+                rules.newMagazineSymbol.ifPresent(stack::addAll);
+            } else {
                 cause.append("The final state is unattainable");
                 return false;
             }
         }
+        tempForLog = Arrays.toString(stack.toArray());
+        logs.add(nowState + ": e / " + new StringBuilder(tempForLog.substring(1, tempForLog.length() - 1)).reverse());
+        moment = new Moment(nowState, 'e', stack.pop());
+        if(regulations.containsKey(moment)){
+            rules = regulations.get(moment);
+            nowState = rules.state;
+            rules.newMagazineSymbol.ifPresent(stack::addAll);
+            logs.add(nowState + ": e / " + Arrays.toString(stack.toArray()));
+        }
         if(endState.contains(nowState)) {
-            logs.add(nowState + ": ");
-            return true;
+            if(stack.empty()) {
+                return true;
+            } else {
+                cause.append("Automate memory is not empty");
+                return false;
+            }
         } else {
             cause.append("End of the chain, but the end state has not been reached");
             return false;
