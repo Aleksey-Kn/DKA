@@ -53,7 +53,6 @@ public class Automate {
     }
 
     private final Set<Character> terminal;
-    private final Set<Character> magazineAlphabet;
     private final Map<Moment, Rules> regulations = new HashMap<>();
     private final String startState;
     private final Set<String> endState;
@@ -64,7 +63,6 @@ public class Automate {
         this.terminal = terminal.stream().map(Character::toLowerCase).collect(Collectors.toSet());
         this.startState = startState;
         this.endState = endState;
-        this.magazineAlphabet = magazineAlphabet;
         zero = zeroMagazine;
 
         String[] t;
@@ -118,15 +116,17 @@ public class Automate {
                 return false;
             }
         }
-        tempForLog = Arrays.toString(stack.toArray());
-        logs.add(nowState + ": e / " + new StringBuilder(tempForLog.substring(1, tempForLog.length() - 1)).reverse());
-        moment = new Moment(nowState, 'e', stack.pop());
-        if(regulations.containsKey(moment)){
-            rules = regulations.get(moment);
-            nowState = rules.state;
-            rules.newMagazineSymbol.ifPresent(stack::addAll);
-            logs.add(nowState + ": e / " + Arrays.toString(stack.toArray()));
+        while (!stack.isEmpty()) {
+            tempForLog = Arrays.toString(stack.toArray());
+            logs.add(nowState + ": e / " + new StringBuilder(tempForLog.substring(1, tempForLog.length() - 1)).reverse());
+            moment = new Moment(nowState, 'e', stack.pop());
+            if (regulations.containsKey(moment)) {
+                rules = regulations.get(moment);
+                nowState = rules.state;
+                rules.newMagazineSymbol.ifPresent(stack::addAll);
+            } else break;
         }
+        logs.add(nowState + ": e / " + Arrays.toString(stack.toArray()));
         if(endState.contains(nowState)) {
             if(stack.empty()) {
                 return true;
