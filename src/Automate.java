@@ -118,9 +118,11 @@ public class Automate {
         }
         while (!stack.isEmpty()) {
             tempForLog = Arrays.toString(stack.toArray());
-            moment = new Moment(nowState, 'e', stack.pop());
+            moment = new Moment(nowState, 'e', stack.peek());
             if (regulations.containsKey(moment)) {
-                logs.add(nowState + ": e / " + new StringBuilder(tempForLog.substring(1, tempForLog.length() - 1)).reverse());
+                stack.pop();
+                logs.add(nowState + ": e / "
+                        + new StringBuilder(tempForLog.substring(1, tempForLog.length() - 1)).reverse());
                 rules = regulations.get(moment);
                 nowState = rules.state;
                 rules.newMagazineSymbol.ifPresent(stack::addAll);
